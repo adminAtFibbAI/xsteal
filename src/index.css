@@ -1,0 +1,56 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Graduate&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221 83% 23%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 0 84% 40%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 34 50% 47%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 23%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer components {
+  .mlb-card {
+    @apply bg-white rounded-lg shadow-lg border-2 border-mlb-navy overflow-hidden;
+  }
+
+  .mlb-input {
+    @apply bg-mlb-cream border-2 border-mlb-navy rounded-md px-4 py-2 focus:ring-2 focus:ring-mlb-red focus:outline-none;
+  }
+
+  .mlb-button {
+    @apply bg-mlb-navy text-white font-baseball py-2 px-6 rounded-md 
+           hover:bg-mlb-red transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .stat-value {
+    @apply font-stats text-2xl font-bold text-mlb-navy;
+  }
+
+  .stat-label {
+    @apply font-baseball text-sm text-mlb-gray uppercase tracking-wider;
+  }
+}
