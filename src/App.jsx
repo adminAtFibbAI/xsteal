@@ -6,20 +6,31 @@ import { Alert, AlertDescription } from './components/ui/alert';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Timer, Zap, ArrowUpCircle, Scale } from 'lucide-react';
 
-const calculateXSteal = (pitcherTime, runnerSpeed, jumpQuality) => {
-  const timeComponent = Math.max(0, Math.min(1, (2.0 - pitcherTime) / 0.5));
-  const speedComponent = Math.max(0, Math.min(1, (runnerSpeed - 25) / 5));
-  const jumpComponent = jumpQuality / 100;
+const calculateXSteal = (pitcherTime, runnerSpeed, jumpQuality, popTime, throwVelo) => {
+  // Normalize metrics to 0-1 scale
+  const timeComponent = Math.max(0, Math.min(1, (2.0 - pitcherTime) / 0.5)); // 1.5s is excellent, 2.0s is poor
+  const speedComponent = Math.max(0, Math.min(1, (runnerSpeed - 25) / 5)); // 25-30 ft/s range
+  const jumpComponent = jumpQuality / 100; // Already 0-100 scale
+  const popTimeComponent = Math.max(0, Math.min(1, (2.0 - popTime) / 0.3)); // 1.7s is excellent, 2.0s is poor
+  const throwComponent = Math.max(0, Math.min(1, (throwVelo - 75) / 15)); // 75-90 mph range
 
-  const xSteal = (timeComponent * 0.4) + (speedComponent * 0.3) + (jumpComponent * 0.3);
+  // Weighted combination - adjusted weights to include catcher metrics
+  const xSteal = (
+    timeComponent * 0.25 + // Pitcher's time to plate
+    speedComponent * 0.2 + // Runner's speed
+    jumpComponent * 0.15 + // Runner's jump quality
+    popTimeComponent * 0.25 + // Catcher's pop time
+    throwComponent * 0.15    // Catcher's throw velocity
+  );
+  
   return Math.max(0, Math.min(1, xSteal));
 };
 
 const calculateTokens = (xSteal, wasSuccessful) => {
   if (wasSuccessful) {
-    return 1 - xSteal;
+    return 1 - xSteal; // Higher reward for throwing out fast runners
   } else {
-    return -xSteal;
+    return -xSteal; // Higher penalty for failing to throw out likely successful stealers
   }
 };
 
@@ -28,6 +39,8 @@ const XStealCalculator = () => {
     pitcherTime: 1.8,
     runnerSpeed: 27.5,
     jumpQuality: 75,
+    popTime: 1.9,    // Added: Catcher's pop time
+    throwVelo: 82    // Added: Catcher's throw velocity
   });
   
   const [attempts, setAttempts] = useState([]);
@@ -49,7 +62,9 @@ const XStealCalculator = () => {
       const xSteal = calculateXSteal(
         throwData.pitcherTime,
         throwData.runnerSpeed,
-        throwData.jumpQuality
+        throwData.jumpQuality,
+        throwData.popTime,
+        throwData.throwVelo
       );
       
       const tokens = calculateTokens(xSteal, wasSuccessful);
@@ -80,6 +95,7 @@ const XStealCalculator = () => {
 
         <div className="mlb-card p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Pitcher Metrics */}
             <div>
               <label className="stat-label flex items-center gap-2">
                 <Timer size={16} className="text-mlb-red" />
@@ -97,6 +113,7 @@ const XStealCalculator = () => {
               />
             </div>
             
+            {/* Runner Metrics */}
             <div>
               <label className="stat-label flex items-center gap-2">
                 <Zap size={16} className="text-mlb-red" />
@@ -130,6 +147,42 @@ const XStealCalculator = () => {
               />
             </div>
             
+            {/* Catcher Metrics */}
+            <div>
+              <label className="stat-label flex items-center gap-2">
+                <Timer size={16} className="text-mlb-red" />
+                Pop Time (s)
+              </label>
+              <Input
+                type="number"
+                name="popTime"
+                value={throwData.popTime}
+                onChange={handleInputChange}
+                step="0.01"
+                min="1.7"
+                max="2.2"
+                className="mlb-input"
+              />
+            </div>
+
+            <div>
+              <label className="stat-label flex items-center gap-2">
+                <Zap size={16} className="text-mlb-red" />
+                Throw Velocity (mph)
+              </label>
+              <Input
+                type="number"
+                name="throwVelo"
+                value={throwData.throwVelo}
+                onChange={handleInputChange}
+                step="0.1"
+                min="75"
+                max="90"
+                className="mlb-input"
+              />
+            </div>
+            
+            {/* Action Buttons */}
             <div className="flex items-center gap-4">
               <Button 
                 onClick={() => handleCalculate(true)} 
